@@ -174,14 +174,18 @@ Access Token
 
     $apiUri = "https://graph.microsoft.com/v1.0/users/$mailbox/contacts"
     write-host $apiuri
-    Try {
-        $NewContact = (Invoke-RestMethod -Headers @{Authorization = "Bearer $($Token)" } -ContentType 'application/json' -Body $contactobject -Uri $apiUri -Method Post)
-        return $NewContact
-    }
-    catch {
-        throw "Error creating contact $($contact.emailaddress) for $mailbox $($_.Exception.Message)"
-        break
-    }
+    $cnt = 0
+    do {
+        $cnt ++
+        Try {
+                $NewContact = (Invoke-RestMethod -Headers @{Authorization = "Bearer $($Token)" } -ContentType 'application/json' -Body $contactobject -Uri $apiUri -Method Post)
+                return $NewContact
+        }
+        catch {
+                Write-Error "Error creating contact $($contact.emailaddress) for $mailbox $($_.Exception.Message)" -ErrorAction Continue
+        }
+    } while ($cnt -lt 5)
+    throw "Unable to creat contact $($contact.EmailAddress) for $mailbox $($_.Exception.Message)"
 }
 
 ##MAIN##
